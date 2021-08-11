@@ -3,46 +3,47 @@ import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import { Modal, ModalBody, ModalHeader, ModalFooter } from "reactstrap";
+import FormClient from "./Pages/FormClient";
 
 function App() {
   const urlApi = "https://localhost:5001/api/clients";
-  const [data, setData] = useState([]);
+  const [data, setData] = useState({
+    identification:0,
+    identificationType: "",
+    firstName: "",
+    secondName: "",
+    firstLastName: "",
+    secondLastName: "",
+    email: ""
+  });
   const [modalMessage, setModalMessage] = useState(false);
   const [findClient, setFindClient] = useState({
-    id:0
+    identification: 0,
   });
 
-  const peticionGet = async () => {
-    await axios
-      .get(urlApi)
-      .then((response) => {
-        setData(response.data);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
+  // const peticionGet = async () => {
+  //   await axios
+  //     .get(urlApi)
+  //     .then((response) => {
+  //       setData(response.data);
+  //     })
+  //     .catch((error) => {
+  //       console.log(error);
+  //     });
+  // };
 
   const getClient = async () => {
     await axios
-      .get(urlApi + "/" + findClient)
+      .get(urlApi + "/" + findClient.identification)
       .then((response) => {
         setData(response.data);
-        console.log(response);
+        if(response.data.identification == undefined){
+          manageModal();
+        }
       })
       .catch((error) => {
         console.log(error);
-      });
-  };
-
-  const peticionPut = async () => {
-    await axios
-      .put(urlApi, findClient)
-      .then((response) => {
-        setData(response.data);
-      })
-      .catch((error) => {
-        console.log(error);
+        manageModal();
       });
   };
 
@@ -50,12 +51,18 @@ function App() {
     setModalMessage(!modalMessage);
   };
 
-  const handleChange = (e) => { 
-    setFindClient([...findClient.id, e.target]);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFindClient({ ...findClient, [name]: value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    getClient();
   };
 
   useEffect(() => {
-    peticionGet();
+    // peticionGet();
   }, []);
 
   return (
@@ -67,7 +74,7 @@ function App() {
       </header>
       <header></header>
       <section className="container container-md">
-        <table className="table table-bordered">
+        {/* <table className="table table-bordered">
           <thead>
             <tr>
               <th>Identificación</th>
@@ -92,45 +99,60 @@ function App() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table> */}
 
-        <div className="form-row">
+        <form onSubmit={(e) => handleSubmit(e)}>
+          <div className="form-group">
+            <label>Digite el Numero Nit a Consultar</label>
+          </div>
+          <br />
           <div className="form-group">
             <label htmlFor="identification"></label>
             <input
-              type="text"
+            className="form-control form-control-md"
+              type="number"
               name="identification"
               id="identification"
-              onChange={handleChange}
+              value={findClient.identification}
+              onChange={(e) => handleChange(e)}
             />
           </div>
-          <div className="form-group">
-            <button
-              type="submit"
-              className="btn btn-danger"
-              onClick={() => getClient()}
-            >
-              Consultar
-            </button>
-          </div>
-        </div>
+          <br />
+          <button className="btn btn-danger">Consultar</button>
+        </form>
       </section>
+
+      {data.identification > 0 && (
+        <FormClient
+          identification={data.identification}
+          identificationType={data.identification}
+          companyName={data.companyName}
+          firstName={data.firstName}
+          secondName={data.secondName}
+          firstLastName={data.firstLastName}
+          secondLastName={data.secondLastName}
+          email={data.email}
+        ></FormClient>
+      )}
 
       <Modal isOpen={modalMessage}>
         <ModalHeader>
           <div className="container">
             <p>Información</p>
-            <button
-              className="btn btn-dark ml-auto"
-              onClick={() => manageModal()}
-            ></button>
           </div>
         </ModalHeader>
-        <ModalBody>Mensaje al usuario</ModalBody>
+        <ModalBody>
+        <div className="container">
+            <p>No se ha encontrado el cliente registrado</p>
+          </div></ModalBody>
+        <ModalFooter><button
+              className="btn btn-dark ml-auto"
+              onClick={() => manageModal()}
+            >Cerrar</button></ModalFooter>
       </Modal>
 
       <footer className="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
-        <div className="col-md-4 d-flex align-items-center">
+        <div className="col-md-12 align-items-center">
           <span className="text-muted">© 2021</span>
         </div>
       </footer>
